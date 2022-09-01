@@ -7,9 +7,11 @@ const registerView = (req, res) => {
   res.render("register", {});
 };
 //Post Request for Register
-const registerUser = (req, res) => {
-  const { name, email, location, password, confirm } = req.body;
-  if (!name || !email || !password || !confirm) {
+
+exports.registerUser = (req, res) => {
+  console.log(req.body)
+  const { email, password, confirm, role } = req.body;
+  if (!email || !password || !confirm || !role) {
     console.log("Fill empty fields");
   }
   //Confirm Passwords
@@ -20,19 +22,15 @@ const registerUser = (req, res) => {
     User.findOne({ email: email }).then((user) => {
       if (user) {
         console.log("email exists");
-        res.render("register", {
-          name,
-          email,
-          password,
-          confirm,
-        });
+        return "Email exists"
       } else {
         //Validation
         const newUser = new User({
-          name,
+          
           email,
-          location,
+       
           password,
+          role
         });
         //Password Hashing
         bcrypt.genSalt(10, (err, salt) =>
@@ -41,11 +39,11 @@ const registerUser = (req, res) => {
             newUser.password = hash;
             newUser
               .save()
-              .then(res.redirect("/login"))
+              .then(newUser)
               .catch((err) => console.log(err));
           })
         );
-      }
+        }
     });
   }
 };
@@ -54,7 +52,7 @@ const loginView = (req, res) => {
   res.render("login", {});
 };
 //Logging in Function
-const loginUser = (req, res) => {
+exports.loginUser = (req, res, next) => {
   const { email, password } = req.body;
   //Required
   if (!email || !password) {
@@ -65,15 +63,15 @@ const loginUser = (req, res) => {
     });
   } else {
     passport.authenticate("local", {
-      successRedirect: "/dashboard",
+      successRedirect: "Success",
       failureRedirect: "/login",
       failureFlash: true,
-    })(req, res);
+    })(req, res, next);
   }
 };
-module.exports = {
-  registerView,
-  loginView,
-  registerUser,
-  loginUser,
-};
+// module.exports = {
+//   registerView,
+//   loginView,
+//   registerUser,
+//   loginUser,
+// };
