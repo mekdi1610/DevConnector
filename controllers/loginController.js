@@ -2,6 +2,7 @@
 const passport = require("passport");
 const User = require("../models/User");
 const bcrypt = require("bcryptjs");
+const auth = require("../middleware/auth")
 //For Register Page
 const registerView = (req, res) => {
   res.render("register", {});
@@ -62,12 +63,28 @@ exports.loginUser = (req, res, next) => {
       password,
     });
   } else {
-    passport.authenticate("local", {
-      successRedirect: "Success",
-      failureRedirect: "/login",
-      failureFlash: true,
-    })(req, res, next);
+   // console.log(res.data)
+   return passport.authenticate('local', { session: false }, (err, user, info) => {
+    if(err) {
+      return next(err);
+    }
+    else if(user){
+      const token = auth.generateAccessToken(user);
+      let user_data = {
+          id:user._id,
+          email:user.email,
+          token:token
+      }
+      console.log(user_data);
+      res.status(200).send({
+        message: "Sucess",
+        data: user_data,
+      });
+    }
+
+   }) (req, res, next)
   }
+  
 };
 // module.exports = {
 //   registerView,
